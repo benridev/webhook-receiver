@@ -27,52 +27,31 @@ function verifyLineSignature(channelSecret, signature, rawBody) {
   return signature === hash;
 }
 
-// Build Postman collection from a webhook log entry
-export function buildPostmanCollection(log) {
-  // Stored structure: log.data (from logs.js) or log.payload (raw from db)
+// Build cURL command from a webhook log entry (importable into Postman via Raw Text)
+export function buildCurlCommand(log) {
   const payload = log.data || log.payload;
   const headers = payload?.headers || {};
-  const allowedHeaders = ['content-type', 'user-agent', 'x-line-signature', 'accept'];
+  const allowedHeaders = ['accept', 'user-agent', 'content-type', 'x-line-signature'];
 
-  // Strip query string from url (e.g. ?...path=X9eLWIpGVd)
-  const rawUrl = (payload?.url || '').split('?')[0];
-  const withoutProtocol = rawUrl.replace('https://', '').replace('http://', '');
-  const hostPart = withoutProtocol.split('/')[0];
-  const pathParts = withoutProtocol.split('/').slice(1).filter(Boolean);
+  // Strip query string from url
+  const url = (payload?.url || '').split('?')[0];
 
   // Use rawBody for valid signature replay, fallback to re-serialized body
-  const bodyRaw = payload?.rawBody || JSON.stringify(payload?.body ?? {}, null, 2);
+  const body = payload?.rawBody || JSON.stringify(payload?.body ?? {});
 
-  return {
-    info: {
-      name: `Webhook Log #${log.id}`,
-      schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json',
-    },
-    item: [
-      {
-        name: `${payload?.method || 'POST'} - ${new Date(log.received_at).toLocaleString()}`,
-        request: {
-          method: payload?.method || 'POST',
-          header: Object.entries(headers)
-            .filter(([key]) => allowedHeaders.includes(key.toLowerCase()))
-            .map(([key, value]) => ({ key, value: String(value) })),
-          url: {
-            raw: rawUrl,
-            protocol: 'https',
-            host: hostPart.split('.'),
-            path: pathParts,
-          },
-          body: {
-            mode: 'raw',
-            raw: bodyRaw,
-            options: {
-              raw: { language: 'json' },
-            },
-          },
-        },
-      },
-    ],
-  };
+  const headerFlags = Object.entries(headers)
+    .filter(([key]) => allowedHeaders.includes(key.toLowerCase()))
+    .map(([key, value]) => `  -H ${JSON.stringify(`${key}: ${value}`)}`)
+    .join(' \
+');
+
+  // Escape single quotes in body for shell safety
+  const escapedBody = body.replace(/'/g, `'\''`);
+
+  return `curl '${url}' \
+  -X ${payload?.method || 'POST'} \
+${headerFlags} \
+  --data-raw '${escapedBody}'`;
 }
 
 export default async function handler(req, res) {

@@ -1,6 +1,6 @@
 import { db } from './_utils/db.js';
 import { authenticate } from './_utils/middleware.js';
-import { buildPostmanCollection } from './webhook/[...path].js';
+import { buildCurlCommand } from './webhook/[...path].js';
 
 const handler = async (req, res) => {
   if (req.method !== 'GET') {
@@ -31,7 +31,7 @@ const handler = async (req, res) => {
       method: log.method,
       received_at: log.received_at,
       data: log.payload || null,
-      postman: buildPostmanCollection({
+      curl: buildCurlCommand({
         id: log.id,
         received_at: log.received_at,
         data: log.payload || null,
