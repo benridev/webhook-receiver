@@ -169,10 +169,10 @@
                     </span>
                   </div>
                   <button
-                    @click="copyForPostman(log)"
+                    @click="copyCurl(log)"
                     class="px-3 py-1 text-sm bg-orange-600 text-white rounded hover:bg-orange-700"
                   >
-                    Copy for Postman
+                    Copy cURL
                   </button>
                 </div>
 
@@ -263,16 +263,15 @@ export default {
       alert('URL copied to clipboard!');
     };
 
-    const copyForPostman = (log) => {
-      const postmanFormat = {
-        method: log.method,
-        url: getWebhookUrl(selectedEndpoint.value.path),
-        headers: log.data?.headers || {},
-        body: log.data?.body || {}
-      };
-      
-      navigator.clipboard.writeText(JSON.stringify(postmanFormat, null, 2));
-      alert('Copied to clipboard! Paste in Postman as Raw JSON');
+    // ✅ Copy cURL command — paste into Postman via Import > Raw Text
+    const copyCurl = (log) => {
+      const curl = log.curl;
+      if (!curl) {
+        alert('cURL not available for this log (recorded before this feature was added)');
+        return;
+      }
+      navigator.clipboard.writeText(curl);
+      alert('cURL copied! In Postman: Import → Raw Text → paste → Continue');
     };
 
     const handleLogout = async () => {
@@ -298,7 +297,7 @@ export default {
       viewLogs,
       getWebhookUrl,
       copyUrl,
-      copyForPostman,
+      copyCurl,
       handleLogout
     };
   }
