@@ -168,12 +168,20 @@
                       {{ new Date(log.received_at).toLocaleString() }}
                     </span>
                   </div>
-                  <button
-                    @click="copyCurl(log)"
-                    class="px-3 py-1 text-sm bg-orange-600 text-white rounded hover:bg-orange-700"
-                  >
-                    Copy cURL
-                  </button>
+                  <div class="flex gap-2">
+                    <button
+                      @click="copyCurl(log)"
+                      class="px-3 py-1 text-sm bg-orange-600 text-white rounded hover:bg-orange-700"
+                    >
+                      Copy cURL
+                    </button>
+                    <button
+                      @click="deleteLog(log.id)"
+                      class="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      Delete Log
+                    </button>
+                  </div>
                 </div>
 
                 <details class="mt-2">
@@ -274,6 +282,17 @@ export default {
       alert('cURL copied! In Postman: Import → Raw Text → paste → Continue');
     };
 
+    // ✅ Delete a single log from DB and remove from view
+    const deleteLog = async (logId) => {
+      if (!confirm('Delete this log?')) return;
+      try {
+        await api.deleteLog(logId);
+        logs.value = logs.value.filter(l => l.id !== logId);
+      } catch (err) {
+        alert('Failed to delete log');
+      }
+    };
+
     const handleLogout = async () => {
       await api.logout();
       localStorage.removeItem('isAuthenticated');
@@ -298,6 +317,7 @@ export default {
       getWebhookUrl,
       copyUrl,
       copyCurl,
+      deleteLog,
       handleLogout
     };
   }

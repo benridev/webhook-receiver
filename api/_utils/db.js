@@ -81,7 +81,18 @@ export const db = {
       LIMIT ${limit}
     `;
     return result.rows;
-  }
+  },
+
+  // Delete a single log — verifies it belongs to one of the user's endpoints
+  async deleteWebhookLog(logId, userEndpointIds) {
+    const result = await sql`
+      DELETE FROM webhook_logs
+      WHERE id = ${logId}
+        AND endpoint_id = ANY(${userEndpointIds})
+      RETURNING id
+    `;
+    return result.rows[0] || null;
+  },
 };
 
 

@@ -43,5 +43,9 @@ export default {
   async getLogs(endpointId) {
     const { data } = await api.get('/logs', { params: { endpointId } });
     return data.logs;
-  }
+  },
+
+  async deleteLog(id) {
+    await api.delete('/logs', { params: { id } });
+  },
 };
