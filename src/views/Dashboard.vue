@@ -162,10 +162,18 @@
                 class="border rounded-lg p-4"
               >
                 <div class="flex justify-between items-start mb-2">
-                  <div>
+                  <div class="flex items-center flex-wrap gap-2">
                     <span class="font-medium">{{ log.method }}</span>
-                    <span class="text-sm text-gray-500 ml-2">
+                    <span class="text-sm text-gray-500">
                       {{ new Date(log.received_at).toLocaleString() }}
+                    </span>
+                    <span
+                      v-for="event in getEventTypes(log)"
+                      :key="event"
+                      :class="eventTypeClass(event)"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                    >
+                      {{ event }}
                     </span>
                   </div>
                   <div class="flex gap-2">
@@ -282,6 +290,26 @@ export default {
       alert('cURL copied! In Postman: Import → Raw Text → paste → Continue');
     };
 
+    // Extract all event types from a log entry
+    const getEventTypes = (log) => {
+      const events = log.data?.events || log.data?.body?.events || [];
+      return [...new Set(events.map(e => e.type).filter(Boolean))];
+    };
+
+    // Color mapping per LINE event type
+    const eventTypeClass = (type) => {
+      const map = {
+        message:  'bg-blue-100 text-blue-800',
+        follow:   'bg-green-100 text-green-800',
+        unfollow: 'bg-red-100 text-red-800',
+        join:     'bg-teal-100 text-teal-800',
+        leave:    'bg-orange-100 text-orange-800',
+        postback: 'bg-purple-100 text-purple-800',
+        beacon:   'bg-yellow-100 text-yellow-800',
+      };
+      return map[type] || 'bg-gray-100 text-gray-800';
+    };
+
     // ✅ Delete a single log from DB and remove from view
     const deleteLog = async (logId) => {
       if (!confirm('Delete this log?')) return;
@@ -316,6 +344,8 @@ export default {
       viewLogs,
       getWebhookUrl,
       copyUrl,
+      getEventTypes,
+      eventTypeClass,
       copyCurl,
       deleteLog,
       handleLogout
