@@ -196,7 +196,39 @@
                   <summary class="cursor-pointer text-sm text-indigo-600 hover:text-indigo-800">
                     View Details
                   </summary>
-                  <pre class="mt-2 p-3 bg-gray-100 rounded text-xs overflow-x-auto">{{ JSON.stringify(log.data, null, 2) }}</pre>
+                  <div class="mt-2">
+                    <!-- Tabs -->
+                    <div class="flex border-b mb-2">
+                      <button
+                        @click.prevent="setTab(log.id, 'data')"
+                        :class="getTab(log.id) === 'data'
+                          ? 'border-b-2 border-indigo-600 text-indigo-600'
+                          : 'text-gray-500 hover:text-gray-700'"
+                        class="px-3 py-1 text-xs font-medium"
+                      >
+                        Data
+                      </button>
+                      <button
+                        @click.prevent="setTab(log.id, 'curl')"
+                        :class="getTab(log.id) === 'curl'
+                          ? 'border-b-2 border-indigo-600 text-indigo-600'
+                          : 'text-gray-500 hover:text-gray-700'"
+                        class="px-3 py-1 text-xs font-medium"
+                      >
+                        cURL
+                      </button>
+                    </div>
+                    <!-- Data tab -->
+                    <pre
+                      v-if="getTab(log.id) === 'data'"
+                      class="p-3 bg-gray-100 rounded text-xs overflow-x-auto"
+                    >{{ JSON.stringify(log.data, null, 2) }}</pre>
+                    <!-- cURL tab -->
+                    <pre
+                      v-else
+                      class="p-3 bg-gray-900 text-green-400 rounded text-xs overflow-x-auto"
+                    >{{ log.curl || 'cURL not available for this log' }}</pre>
+                  </div>
                 </details>
               </div>
             </div>
@@ -290,6 +322,11 @@ export default {
       alert('cURL copied! In Postman: Import → Raw Text → paste → Continue');
     };
 
+    // Tab state per log id
+    const activeTabs = ref({});
+    const getTab = (logId) => activeTabs.value[logId] || 'data';
+    const setTab = (logId, tab) => { activeTabs.value[logId] = tab; };
+
     // Extract all event types from a log entry
     const getEventTypes = (log) => {
       const events = log.data?.events || log.data?.body?.events || [];
@@ -344,6 +381,9 @@ export default {
       viewLogs,
       getWebhookUrl,
       copyUrl,
+      activeTabs,
+      getTab,
+      setTab,
       getEventTypes,
       eventTypeClass,
       copyCurl,
